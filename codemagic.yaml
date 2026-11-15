@@ -1,7 +1,8 @@
 
+
 workflows:
   android-apk:
-    name: Conferência de Drenagem Android
+    name: Strata Conferência Android
     max_build_duration: 60
     instance_type: mac_mini_m2
 
@@ -10,7 +11,19 @@ workflows:
 
     scripts:
       - name: Criar estrutura Android
-        script: flutter create --platforms=android --project-name strata_conferencia .
+        script: |
+          cp lib/main.dart /tmp/main.dart
+          flutter create --platforms=android --project-name strata_conferencia .
+          cp /tmp/main.dart lib/main.dart
+
+      - name: Conferir código principal
+        script: |
+          echo "===== MAIN.DART COMPILADO ====="
+          sed -n '1,140p' lib/main.dart
+          if grep -n "material_ui/material_ui.dart" lib/main.dart; then
+            echo "ERRO: importação incorreta encontrada."
+            exit 1
+          fi
 
       - name: Configurar permissões GPS
         script: |
@@ -44,4 +57,3 @@ workflows:
 
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
-
