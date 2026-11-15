@@ -1,5 +1,4 @@
 
-
 workflows:
   android-apk:
     name: Strata Conferência Android
@@ -10,16 +9,34 @@ workflows:
       flutter: stable
 
     scripts:
+      - name: Conferir arquivos do projeto
+        script: |
+          echo "===== PASTA ATUAL ====="
+          pwd
+          echo "===== ARQUIVOS NA RAIZ ====="
+          ls -la
+          echo "===== PROCURANDO MAIN.DART ====="
+          find . -name main.dart -not -path "*/.dart_tool/*" -not -path "*/build/*"
+
       - name: Criar estrutura Android
         script: |
-          cp lib/main.dart /tmp/main.dart
+          if [ ! -f pubspec.yaml ]; then
+            echo "ERRO: pubspec.yaml não encontrado na raiz."
+            exit 1
+          fi
+
           flutter create --platforms=android --project-name strata_conferencia .
-          cp /tmp/main.dart lib/main.dart
 
       - name: Conferir código principal
         script: |
-          echo "===== MAIN.DART COMPILADO ====="
+          echo "===== MAIN.DART ====="
+          if [ ! -f lib/main.dart ]; then
+            echo "ERRO: lib/main.dart não encontrado."
+            exit 1
+          fi
+
           sed -n '1,140p' lib/main.dart
+
           if grep -n "material_ui/material_ui.dart" lib/main.dart; then
             echo "ERRO: importação incorreta encontrada."
             exit 1
@@ -50,10 +67,19 @@ workflows:
           PY
 
       - name: Instalar dependências
-        script: flutter pub get
+        script: |
+          flutter pub get
+
+      - name: Analisar projeto
+        script: |
+          flutter analyze
 
       - name: Gerar APK
-        script: flutter build apk --release
+        script: |
+          flutter build apk --release
 
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
+
+
+
