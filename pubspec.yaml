@@ -1,3 +1,4 @@
+
 name: strata_conferencia
 description: Aplicativo Strata Conferência.
 publish_to: "none"
@@ -16,6 +17,7 @@ dependencies:
   pdf: ^3.11.1
   share_plus: ^10.1.4
   open_filex: ^4.6.0
+  geolocator: ^13.0.2
 
 dev_dependencies:
   flutter_test:
@@ -24,3 +26,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - 20261027_EIXO_GO236_R.xml
+    - Alinhamento_Horizontal_GO110_Est1500_a_2249.xml
