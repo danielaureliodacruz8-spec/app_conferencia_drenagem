@@ -189,13 +189,13 @@ class _ConferenciaScreenState extends State<ConferenciaScreen> {
 
     const arquivos = [
       _ArquivoEixo(
-        caminho: 'assets/eixos/20261027_EIXO_GO236_R.xml',
+        caminho: '20261027_EIXO_GO236_R.xml',
         rodoviaPadrao: 'GO-236',
         trechoPadrao: 'Trecho GO-236',
       ),
       _ArquivoEixo(
         caminho:
-            'assets/eixos/Alinhamento_Horizontal_GO110_Est1500_a_2249.xml',
+            'Alinhamento_Horizontal_GO110_Est1500_a_2249.xml',
         rodoviaPadrao: 'GO-110',
         trechoPadrao: 'Estiva / São Domingos',
       ),
