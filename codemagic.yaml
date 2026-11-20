@@ -1,85 +1,85 @@
-
 workflows:
   android-apk:
-    name: Strata Conferência Android
+    name: Strata Conferência - Android APK
     max_build_duration: 60
     instance_type: mac_mini_m2
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
 
     environment:
       flutter: stable
 
     scripts:
-      - name: Conferir arquivos do projeto
+      - name: Verificar estrutura Flutter
         script: |
-          echo "===== PASTA ATUAL ====="
-          pwd
-          echo "===== ARQUIVOS NA RAIZ ====="
-          ls -la
-          echo "===== PROCURANDO MAIN.DART ====="
-          find . -name main.dart -not -path "*/.dart_tool/*" -not -path "*/build/*"
+          set -e
+          test -f pubspec.yaml
+          test -f lib/main.dart
+          test -f lib/screens/conferencias_list_screen.dart
+          test -f lib/screens/conferencia_screen.dart
+          test -f lib/screens/conferencia_detail_screen.dart
+          test -f lib/models/conferencia_model.dart
+          test -f lib/models/foto_model.dart
+          test -f lib/models/medicao_model.dart
+          test -f lib/database/database_helper.dart
+          test -f 20261027_EIXO_GO236_R.xml
+          test -f Alinhamento_Horizontal_GO110_Est1500_a_2249.xml
+          echo "Estrutura principal conferida."
 
-      - name: Criar estrutura Android
+      - name: Preparar projeto Android
         script: |
-          if [ ! -f pubspec.yaml ]; then
-            echo "ERRO: pubspec.yaml não encontrado na raiz."
-            exit 1
+          set -e
+          if [ ! -d android ]; then
+            flutter create --platforms=android --project-name strata_conferencia .
           fi
 
-          flutter create --platforms=android --project-name strata_conferencia .
-
-      - name: Conferir código principal
+      - name: Configurar permissões de localização
         script: |
-          echo "===== MAIN.DART ====="
-          if [ ! -f lib/main.dart ]; then
-            echo "ERRO: lib/main.dart não encontrado."
-            exit 1
-          fi
-
-          sed -n '1,140p' lib/main.dart
-
-          if grep -n "material_ui/material_ui.dart" lib/main.dart; then
-            echo "ERRO: importação incorreta encontrada."
-            exit 1
-          fi
-
-      - name: Configurar permissões GPS
-        script: |
+          set -e
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
-          arquivo = Path("android/app/src/main/AndroidManifest.xml")
-          texto = arquivo.read_text()
-
-          permissoes = [
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          text = manifest.read_text()
+          permissions = [
               '    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>',
               '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>',
           ]
-
-          for permissao in permissoes:
-              if permissao not in texto:
-                  texto = texto.replace(
-                      '<application',
-                      permissao + '\n    <application',
-                      1
-                  )
-
-          arquivo.write_text(texto)
+          for permission in permissions:
+              if permission not in text:
+                  text = text.replace("<application", permission + "\\n    <application", 1)
+          manifest.write_text(text)
           PY
 
-      - name: Instalar dependências
+      - name: Limpar e instalar dependências
         script: |
+          set -e
+          flutter clean
           flutter pub get
 
-      - name: Analisar projeto
+      - name: Analisar código
         script: |
+          set -e
           flutter analyze
 
-      - name: Gerar APK
+      - name: Executar testes
         script: |
-          flutter build apk --release
+          set -e
+          flutter test
+
+      - name: Gerar APKs otimizados por arquitetura
+        script: |
+          set -e
+          flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/symbols
+          ls -lh build/app/outputs/flutter-apk/
 
     artifacts:
-      - build/app/outputs/flutter-apk/app-release.apk
-
-
-
+      - build/app/outputs/flutter-apk/*.apk
+      - build/symbols/**
